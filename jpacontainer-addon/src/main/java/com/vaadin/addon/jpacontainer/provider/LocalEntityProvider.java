@@ -455,8 +455,12 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
                             .getTypeMetadata().getPersistentPropertyNames()
                             .iterator().next())));
         } else {
-
-            query.select(cb.count(root.get(entityIdPropertyName)));
+			if ( query.isDistinct() ) { 
+				query.select( cb.countDistinct( root.get(entityIdPropertyName) ) ); 
+			} 
+			else {
+	            query.select( cb.count(root.get(entityIdPropertyName) ) );
+			}
         }
         tellDelegateQueryHasBeenBuilt(container, cb, query);
         TypedQuery<Long> tq = doGetEntityManager().createQuery(query);
@@ -536,7 +540,12 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
                             .getTypeMetadata().getPersistentPropertyNames()
                             .iterator().next())));
         } else {
-            query.select(cb.count(root.get(entityIdPropertyName)));
+			if ( query.isDistinct() ) { 
+				query.select( cb.countDistinct( root.get(entityIdPropertyName) ) ); 
+			} 
+			else {
+            	query.select(cb.count(root.get(entityIdPropertyName)));
+			}
         }
         tellDelegateQueryHasBeenBuilt(container, cb, query);
         TypedQuery<Long> tq = doGetEntityManager().createQuery(query);
