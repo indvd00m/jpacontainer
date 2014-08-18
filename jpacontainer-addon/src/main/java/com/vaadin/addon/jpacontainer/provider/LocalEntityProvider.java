@@ -804,6 +804,26 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
         return doGetAllEntityIdentifiers(container, filter, sortBy);
     }
 
+
+	public List<Object> getEntityIdentifiersLimit(
+			EntityContainer<T> entityContainer, Filter filter,
+			List<SortBy> sortBy, int offset, int limit) {
+		return doGetEntityIdentifiersLimit(entityContainer, filter, sortBy, offset, limit);
+	}
+		
+	protected List<Object> doGetEntityIdentifiersLimit(
+            EntityContainer<T> container, Filter filter, List<SortBy> sortBy, int offset, int limit) {
+        if (sortBy == null) {
+            sortBy = Collections.emptyList();
+        }
+        sortBy = addPrimaryKeyToSortList(sortBy);
+        TypedQuery<Object> query = createFilteredQuery(container,
+                Arrays.asList(getEntityClassMetadata().getIdentifierProperty()
+                        .getName()), filter, sortBy, false);
+        return Collections.unmodifiableList( query.setFirstResult(offset).setMaxResults(limit).getResultList() );
+    }
+
+
     /*
      * (non-Javadoc)
      * 
