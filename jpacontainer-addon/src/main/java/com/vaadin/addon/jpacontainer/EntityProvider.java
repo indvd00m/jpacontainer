@@ -194,6 +194,24 @@ public interface EntityProvider<T> extends Serializable {
             EntityContainer<T> entityContainer, Filter filter,
             List<SortBy> sortBy);
 
+ /**
+     * Gets the identifiers of items that match <code>filter</code> limits by offset and limit. T
+     * 
+     * @param filter
+     *            the filter that should be used to filter the entities (may be
+     *            null).
+     * @param sortBy
+     *            the properties to sort by, if any (may be null).
+     * @param offset
+     *            number - start from
+     * @param limit
+     *            number - how many 
+     * @return an unmodifiable list of entity identifiers (never null).
+     */
+	public List<Object> getEntityIdentifiersLimit(
+            EntityContainer<T> entityContainer, Filter filter,
+            List<SortBy> sortBy, int offset, int limit);
+
     /**
      * Checks if the persistence storage contains an entity identified by
      * <code>entityId</code> that is also matched by <code>filter</code>.
