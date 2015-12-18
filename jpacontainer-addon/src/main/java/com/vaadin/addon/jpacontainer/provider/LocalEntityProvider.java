@@ -44,6 +44,7 @@ import com.vaadin.addon.jpacontainer.EntityProvider;
 import com.vaadin.addon.jpacontainer.LazyLoadingDelegate;
 import com.vaadin.addon.jpacontainer.QueryModifierDelegate;
 import com.vaadin.addon.jpacontainer.SortBy;
+import com.vaadin.addon.jpacontainer.filter.SubqueryProvider;
 import com.vaadin.addon.jpacontainer.metadata.EntityClassMetadata;
 import com.vaadin.addon.jpacontainer.metadata.MetadataFactory;
 import com.vaadin.addon.jpacontainer.metadata.PropertyKind;
@@ -382,7 +383,8 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
 
         List<Predicate> predicates = new ArrayList<Predicate>();
         if (filter != null) {
-            predicates.add(container.convertFilter(filter, cb, root));
+            predicates.add(container.convertFilter(filter, cb, root,
+                    new SubqueryProvider(query)));
         }
         tellDelegateFiltersWillBeAdded(container, cb, query, predicates);
         if (!predicates.isEmpty()) {
@@ -433,7 +435,8 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
         predicates.add(cb.equal(root.get(entityIdPropertyName),
                 cb.literal(entityId)));
         if (filter != null) {
-            predicates.add(container.convertFilter(filter, cb, root));
+            predicates.add(container.convertFilter(filter, cb, root,
+                    new SubqueryProvider(query)));
         }
         tellDelegateFiltersWillBeAdded(container, cb, query, predicates);
         if (!predicates.isEmpty()) {
@@ -453,8 +456,12 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
                             .getTypeMetadata().getPersistentPropertyNames()
                             .iterator().next())));
         } else {
-
-            query.select(cb.count(root.get(entityIdPropertyName)));
+			if ( query.isDistinct() ) { 
+				query.select( cb.countDistinct( root.get(entityIdPropertyName) ) ); 
+			} 
+			else {
+	            query.select( cb.count(root.get(entityIdPropertyName) ) );
+			}
         }
         tellDelegateQueryHasBeenBuilt(container, cb, query);
         TypedQuery<Long> tq = doGetEntityManager().createQuery(query);
@@ -513,7 +520,8 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
 
         List<Predicate> predicates = new ArrayList<Predicate>();
         if (filter != null) {
-            predicates.add(container.convertFilter(filter, cb, root));
+            predicates.add(container.convertFilter(filter, cb, root,
+                    new SubqueryProvider(query)));
         }
         tellDelegateFiltersWillBeAdded(container, cb, query, predicates);
         if (!predicates.isEmpty()) {
@@ -534,7 +542,12 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
                             .getTypeMetadata().getPersistentPropertyNames()
                             .iterator().next())));
         } else {
-            query.select(cb.count(root.get(entityIdPropertyName)));
+			if ( query.isDistinct() ) { 
+				query.select( cb.countDistinct( root.get(entityIdPropertyName) ) ); 
+			} 
+			else {
+            	query.select(cb.count(root.get(entityIdPropertyName)));
+			}
         }
         tellDelegateQueryHasBeenBuilt(container, cb, query);
         TypedQuery<Long> tq = doGetEntityManager().createQuery(query);
@@ -801,6 +814,26 @@ public class LocalEntityProvider<T> implements EntityProvider<T>, Serializable {
             Filter filter, List<SortBy> sortBy) {
         return doGetAllEntityIdentifiers(container, filter, sortBy);
     }
+
+
+	public List<Object> getEntityIdentifiersLimit(
+			EntityContainer<T> entityContainer, Filter filter,
+			List<SortBy> sortBy, int offset, int limit) {
+		return doGetEntityIdentifiersLimit(entityContainer, filter, sortBy, offset, limit);
+	}
+		
+	protected List<Object> doGetEntityIdentifiersLimit(
+            EntityContainer<T> container, Filter filter, List<SortBy> sortBy, int offset, int limit) {
+        if (sortBy == null) {
+            sortBy = Collections.emptyList();
+        }
+        sortBy = addPrimaryKeyToSortList(sortBy);
+        TypedQuery<Object> query = createFilteredQuery(container,
+                Arrays.asList(getEntityClassMetadata().getIdentifierProperty()
+                        .getName()), filter, sortBy, false);
+        return Collections.unmodifiableList( query.setFirstResult(offset).setMaxResults(limit).getResultList() );
+    }
+
 
     /*
      * (non-Javadoc)

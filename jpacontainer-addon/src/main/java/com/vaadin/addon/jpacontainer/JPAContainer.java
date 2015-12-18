@@ -35,6 +35,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 
 import com.vaadin.addon.jpacontainer.EntityProviderChangeEvent.EntityPropertyUpdatedEvent;
+import com.vaadin.addon.jpacontainer.filter.ISubqueryProvider;
 import com.vaadin.addon.jpacontainer.filter.converter.IFilterConverter;
 import com.vaadin.addon.jpacontainer.filter.util.AdvancedFilterableSupport;
 import com.vaadin.addon.jpacontainer.metadata.EntityClassMetadata;
@@ -1756,12 +1757,7 @@ public class JPAContainer<T> implements EntityContainer<T>,
     }
 
     public List<?> getItemIds(int startIndex, int numberOfItems) {
-        // FIXME this should be optimized
-        ArrayList<Object> ids = new ArrayList<Object>();
-        for (int i = 0; i < numberOfItems; i++) {
-            ids.add(getIdByIndex(startIndex + i));
-        }
-        return ids;
+        return doGetEntityProvider().getEntityIdentifiersLimit(this,  getAppliedFiltersAsConjunction(), getSortByList() ,startIndex, numberOfItems);
     }
 
     @Override
@@ -1770,37 +1766,37 @@ public class JPAContainer<T> implements EntityContainer<T>,
     }
 
     @Override
-    public void addFilterConverter(IFilterConverter filterConverter) {
+    public void addFilterConverter(IFilterConverter<?> filterConverter) {
         filterSupport.addFilterConverter(filterConverter);
     }
 
     @Override
-    public void removeFilterConverter(IFilterConverter filterConverter) {
+    public void removeFilterConverter(IFilterConverter<?> filterConverter) {
         filterSupport.removeFilterConverter(filterConverter);
     }
 
     @Override
-    public boolean containsFilterConverter(IFilterConverter filterConverter) {
+    public boolean containsFilterConverter(IFilterConverter<?> filterConverter) {
         return filterSupport.containsFilterConverter(filterConverter);
     }
 
     @Override
     public <X, Y> Predicate[] convertFiltersToArray(Collection<Filter> filters,
-            CriteriaBuilder criteriaBuilder, From<X, Y> root) {
+            CriteriaBuilder criteriaBuilder, From<X, Y> root, ISubqueryProvider subqueryProvider) {
         return filterSupport.convertFiltersToArray(filters, criteriaBuilder,
-                root);
+                root, subqueryProvider);
     }
 
     @Override
     public <X, Y> List<Predicate> convertFilters(Collection<Filter> filters,
-            CriteriaBuilder criteriaBuilder, From<X, Y> root) {
-        return filterSupport.convertFilters(filters, criteriaBuilder, root);
+            CriteriaBuilder criteriaBuilder, From<X, Y> root, ISubqueryProvider subqueryProvider) {
+        return filterSupport.convertFilters(filters, criteriaBuilder, root, subqueryProvider);
     }
 
     @Override
     public <X, Y> Predicate convertFilter(Filter filter,
-            CriteriaBuilder criteriaBuilder, From<X, Y> root) {
-        return filterSupport.convertFilter(filter, criteriaBuilder, root);
+            CriteriaBuilder criteriaBuilder, From<X, Y> root, ISubqueryProvider subqueryProvider) {
+        return filterSupport.convertFilter(filter, criteriaBuilder, root, subqueryProvider);
     }
 
     @Override
