@@ -1757,12 +1757,7 @@ public class JPAContainer<T> implements EntityContainer<T>,
     }
 
     public List<?> getItemIds(int startIndex, int numberOfItems) {
-        // FIXME this should be optimized
-        ArrayList<Object> ids = new ArrayList<Object>();
-        for (int i = 0; i < numberOfItems; i++) {
-            ids.add(getIdByIndex(startIndex + i));
-        }
-        return ids;
+        return doGetEntityProvider().getEntityIdentifiersLimit(this,  getAppliedFiltersAsConjunction(), getSortByList() ,startIndex, numberOfItems);
     }
 
     @Override
